@@ -118,7 +118,27 @@ def insert_data_into_db(payload):
     """
     create_db_table()
     # TODO: Implement the database call    
-    
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            insert_sql = """
+            INSERT INTO events (title, description, image_url, date, location)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_sql, (
+                payload.get("title"),
+                payload.get("description", ""),
+                payload.get("image_url", ""),
+                payload.get("date"),
+                payload.get("location", "")
+            ))
+        connection.commit()
+    except Exception as e:
+        logging.exception("Failed to insert event")
+        raise RuntimeError(f"Insertion failed: {str(e)}")
+    finally:
+        connection.close()
+
     raise NotImplementedError("Database insert function not implemented.")
 
 #Database Function Stub
@@ -128,6 +148,24 @@ def fetch_data_from_db():
     Implement this function to fetch your data from the database.
     """
     # TODO: Implement the database call
+    create_db_table()
+    connection = get_db_connection()
+    try:
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            select_sql = """
+            SELECT id, title, description, image_url, date, location
+            FROM events
+            ORDER BY date ASC
+            """
+            cursor.execute(select_sql)
+            results = cursor.fetchall()
+            return results
+    except Exception as e:
+        logging.exception("Failed to fetch data")
+        raise RuntimeError(f"Fetch failed: {str(e)}")
+    finally:
+        connection.close()
+        
     
     raise NotImplementedError("Database fetch function not implemented.")
 
